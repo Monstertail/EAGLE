@@ -34,23 +34,22 @@ class EALitAPI(ls.LitAPI):
             for turn in conversation
         ]
 
-        # **3️⃣ 取最后一条 "user" 消息作为 prompt**
-        prompt = None
-        for msg in reversed(filtered_conversation):
-            if msg["role"] == "user":
-                prompt = msg["content"]
-                break
+        input_ids = self.model.tokenizer.apply_chat_template(
+        filtered_conversation, 
+        add_generation_prompt=True, 
+        return_tensors='pt', 
+        return_dict=True,
+        # tokenize = False,)
+        )["input_ids"].to(self.model.base_model.device)
+        print(input_ids)
 
-        if prompt is None:
-            raise ValueError("No valid user message found in conversation.")
-
-        # print("Prompt:",prompt)
-        # **4️⃣ Tokenize 输入**
-        input_ids = self.model.tokenizer(prompt, return_tensors="pt").input_ids
-        input_ids = input_ids.to(self.model.base_model.device)
+        
+        # # **4️⃣ Tokenize 输入**
+        # input_ids = self.model.tokenizer(prompt, return_tensors="pt").input_ids
+        # input_ids = input_ids.to(self.model.base_model.device)
 
         # **5️⃣ 生成模型输出**
-        raw_output = self.model.eagenerate(input_ids, temperature=0.5, max_new_tokens=512)
+        raw_output = self.model.eagenerate(input_ids, temperature=0, max_new_tokens=512)
 
         # **6️⃣ 去除输入部分，确保只返回新生成的 tokens**
         new_tokens = raw_output[0, input_ids.shape[1]:]
@@ -60,9 +59,9 @@ class EALitAPI(ls.LitAPI):
         print("output text",output_text)
         print("----------------------------------------")
         # yield from output_text
-        for token in new_tokens:
-            yield self.model.tokenizer.decode(token)
-
+        # for token in new_tokens:
+        #     yield self.model.tokenizer.decode(token)
+        yield output_text
     # def predict(self, request):
     #     # 确保 request 是字典或列表
     #     print("reqs:",request)
