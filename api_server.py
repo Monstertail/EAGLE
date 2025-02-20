@@ -2,17 +2,7 @@ import os
 
 import litserve as ls
 
-# from m2d.config import GenConfig
-# from m2d.formatter import Formatter
-# from m2d.model.llama import M2DLlama
 
-# GEN_CONFIG = GenConfig.from_path(
-#     os.environ.get("GEN_CONFIG_PATH", None)
-# )
-
-# FORMATTER = Formatter.from_path(
-#     os.environ.get("FORMAT_CONFIG_PATH", None)
-# )
 
 from eagle.model.ea_model import EaModel
 from fastchat.model import get_conversation_template
