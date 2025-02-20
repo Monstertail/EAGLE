@@ -30,6 +30,7 @@ class EALitAPI(ls.LitAPI):
         device_map="auto",
         total_token=-1
         )
+        self.model.eval()
 
     # def decode_request(self, request):
     #     # print(request)
@@ -60,20 +61,50 @@ class EALitAPI(ls.LitAPI):
     #         for token in raw_output[0]:
     #             yield {"role": "assistant", "content": self.model.tokenizer.decode([token])}
 
-    def predict(self, prompt):
-                # Tokenize 输入
-        input_ids = self.model.tokenizer([prompt]).input_ids
-        input_ids = torch.as_tensor(input_ids).to(self.model.base_model.device)
+    def predict(self, request):
+        # 确保 request 是字典或列表
+        print("reqs:",request)
+        if isinstance(request, dict):
+            messages = request.get("messages", [])
+        elif isinstance(request, list):
+            messages = request
+        else:
+            raise ValueError(f"Unexpected request format: {type(request)}")
 
-        # 生成模型输出
+        # 确保 messages 不为空
+        if not messages:
+            raise ValueError("Empty messages list received.")
+        # print("meesages:", messages)
+        # 取最后一条用户消息
+        prompt = messages[-1]["content"]
+        
+        # Tokenize 输入
+        input_ids = self.model.tokenizer(prompt, return_tensors="pt").input_ids
+        input_ids = input_ids.to(self.model.base_model.device)
+        print("input_ids:",input_ids)
+        # 生成模型输出 (支持流式返回)
         raw_output = self.model.eagenerate(input_ids, temperature=0.5, max_new_tokens=512)
-        print(raw_output)
-        # 解码输出
-        output_text = self.model.tokenizer.decode(raw_output[0])  # 取第一个序列
+        # print(raw_output)
+        # 逐个 token 解码，避免一次性返回
+        new_tokens = raw_output[0, input_ids.shape[1]:]
+        print("new_token:",new_tokens)
+        print(self.model.tokenizer.decode(new_tokens, skip_special_tokens=True))
+        for token in new_tokens:
+            yield self.model.tokenizer.decode(token, skip_special_tokens=True)
+       
+            
 
-        # 逐个字符流式返回
-        for token in output_text:
-            yield token  # 逐字符返回，适用于流式生成
+
+
+    # def predict(self, prompt):
+    #     for chunk in "This is a sample generated output".split():
+    #             yield chunk
+    #             # This
+    #             # is
+    #             # a
+    #             # sample
+    #             # generated
+    #             # output
 
 
 if __name__ == "__main__":
