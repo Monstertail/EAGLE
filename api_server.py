@@ -21,11 +21,12 @@ class EALitAPI(ls.LitAPI):
     def setup(self, device):
         print(f"Using device={device}")
         self.model= EaModel.from_pretrained(
-        # base_model_path="Qwen/Qwen2-7B-Instruct",
-        # ea_model_path="yuhuili/EAGLE-Qwen2-7B-Instruct",
-        base_model_path="meta-llama/Meta-Llama-3-8B",
-        ea_model_path="yuhuili/EAGLE-LLaMA3-Instruct-8B",
-        torch_dtype=torch.float16,
+        base_model_path="Qwen/Qwen2-7B-Instruct",
+        ea_model_path="yuhuili/EAGLE-Qwen2-7B-Instruct",
+        # base_model_path="meta-llama/Meta-Llama-3-8B",
+        # ea_model_path="yuhuili/EAGLE-LLaMA3-Instruct-8B",
+        # torch_dtype=torch.float16,
+        torch_dtype=torch.bfloat16, #bf16 for qwen 2
         low_cpu_mem_usage=True,
         device_map="auto",
         total_token=-1
